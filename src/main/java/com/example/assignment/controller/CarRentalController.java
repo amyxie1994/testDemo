@@ -14,9 +14,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.annotation.Resource;
-
-
 @Controller
 @RequestMapping(value = "/car")
 public class CarRentalController {
@@ -29,7 +26,6 @@ public class CarRentalController {
     @ResponseBody
     @RequestMapping("/rent")
     public Result rentalCar(CarRentalVO carRentalVO) {
-
         try{
             carRentalService.rentCar(CarRentalVOConvert.carRentalVO2DO(carRentalVO));
             return ResultUtil.success();
@@ -39,7 +35,7 @@ public class CarRentalController {
         }
         catch (Exception e) {
             LOGGER.error("CarRental failed", e);
-            return ResultUtil.fail(e.getMessage(), CommonErrorCode.SYSTEM_ERROR.getCode());
+            return ResultUtil.fail(CommonErrorCode.SYSTEM_ERROR.getDesc(), CommonErrorCode.SYSTEM_ERROR.getCode());
         }
 
     }

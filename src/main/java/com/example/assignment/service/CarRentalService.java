@@ -4,5 +4,10 @@ import com.example.assignment.domain.domain.CarRentalDO;
 
 public interface CarRentalService {
 
-    void rentCar(CarRentalDO carRentalDO);
+    /**
+     * rent car
+     * @param carRentalDO car rental vo
+     * @return assign car no
+     */
+    String rentCar(CarRentalDO carRentalDO);
 }

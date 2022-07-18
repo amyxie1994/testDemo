@@ -4,6 +4,46 @@
 <mapper namespace="com.example.assignment.dao.CarRentalLogMapper">
 
 
+    <resultMap type="com.example.assignment.domain.po.CarDailyRentalLogPO" id="carrentallog_result">
+        <result property="carNo" column="car_no"/>
+        <result property="status" column="status"/>
+        <result property="recordTime" column="record_time"/>
+    </resultMap>
+
+    <sql id ="cardailyrentallog_column">
+        car_no,
+        status,
+        record_time
+    </sql>
+
+    <sql id ="query_sharing">
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+        1=1
+        <if test="carNo!=null">
+            AND car_no = #{carNo}
+        </if>
+        <if test="status!=null">
+                AND status = #{status}
+        </if>
+        <if test="carNoList!=null">
+            AND car_no IN
+            <foreach collection="carNoList" item="id" open="(" close=")" separator=",">
+                #{id}
+            </foreach>
+        </if>
+        </trim>
+
+    </sql>
+
+
+
+    <select id="queryCarDailyRentalLogList" resultMap="carrentallog_result" parameterType="java.util.HashMap">
+        SELECT
+        <include refid="cardailyrentallog_column" />
+        FROM demo_car_daily_rental_log
+        <include refid="query_sharing" />
+    </select>
+
 
     <update id="updateCarRentalLogStatus" parameterType="com.example.assignment.domain.po.CarDailyRentalLogPO">
         UPDATE
@@ -18,6 +58,8 @@
             #{id}
         </foreach>
     </update>
+
+
 
 
 </mapper>

@@ -52,7 +52,7 @@ public class CarRentalServiceImpl implements CarRentalService {
 
 
     @Override
-    public void rentCar(CarRentalDO carRentalDO) {
+    public String rentCar(CarRentalDO carRentalDO) {
 
         // check params
         checkParams(carRentalDO);
@@ -78,6 +78,8 @@ public class CarRentalServiceImpl implements CarRentalService {
 
             }
         });
+
+        return assignCarNo;
 
     }
 
@@ -156,7 +158,8 @@ public class CarRentalServiceImpl implements CarRentalService {
         while (temp < endTime) {
             Long occupiedTime = temp;
             occupiedTimeList.add(occupiedTime);
-            temp += 3600 * 24 * 1000;
+            //temp += 3600 * 24 * 1000;
+            temp +=1;
         }
         return occupiedTimeList;
     }
