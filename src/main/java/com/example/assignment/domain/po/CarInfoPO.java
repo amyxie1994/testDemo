@@ -21,4 +21,6 @@ public class CarInfoPO {
      * update time
      */
     private Long updateTime;
+
+
 }

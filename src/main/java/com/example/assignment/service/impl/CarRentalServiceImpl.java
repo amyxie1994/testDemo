@@ -3,31 +3,34 @@ package com.example.assignment.service.impl;
 import com.example.assignment.common.enums.CarRentalStatus;
 import com.example.assignment.common.errorcode.CarRentalErrorCode;
 import com.example.assignment.controller.BusinessException;
-import com.example.assignment.controller.CarRentalController;
 import com.example.assignment.dao.CarRentalLogMapper;
 import com.example.assignment.dao.CarRentalOrderMapper;
+import com.example.assignment.domain.domain.CarDailyRentalLogDO;
+import com.example.assignment.domain.domain.CarInfoDO;
 import com.example.assignment.domain.domain.CarRentalDO;
 import com.example.assignment.domain.po.CarDailyRentalLogPO;
 import com.example.assignment.domain.po.CarRentalOrderPO;
+import com.example.assignment.service.CarInfoQueryService;
+import com.example.assignment.service.CarRentalLogQueryService;
 import com.example.assignment.service.CarRentalService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static com.example.assignment.common.errorcode.CarRentalErrorCode.SAVE_RENTAL_ORDER_FAIL;
+import static com.example.assignment.common.errorcode.CarRentalErrorCode.*;
 
 
-@Service
+@Service("carRentalService")
 public class CarRentalServiceImpl implements CarRentalService {
 
     @Autowired
@@ -36,6 +39,12 @@ public class CarRentalServiceImpl implements CarRentalService {
     @Autowired
     private CarRentalLogMapper carRentalLogMapper;
 
+    @Autowired
+    private CarRentalLogQueryService carRentalLogQueryService;
+
+    @Autowired
+    private CarInfoQueryService carInfoQueryService;
+
     @Resource
     private TransactionTemplate transactionTemplate;
 
@@ -43,24 +52,26 @@ public class CarRentalServiceImpl implements CarRentalService {
 
 
     @Override
-    public void rentCar(CarRentalDO carRentalDO){
+    public void rentCar(CarRentalDO carRentalDO) {
 
-        // 参数校验
-        paramsCheck(carRentalDO);
+        // check params
+        checkParams(carRentalDO);
 
+        // assign available car
         String assignCarNo = assignAvailableCar(carRentalDO);
 
-        CarRentalOrderPO carRentalOrderPO = assembleCarRentalOrderInfo(carRentalDO,assignCarNo);
-        CarDailyRentalLogPO updateStatusPO = assembleCarStatusInfo(carRentalDO,assignCarNo);
+        //assemble rental info
+        CarRentalOrderPO carRentalOrderPO = assembleCarRentalOrderInfo(carRentalDO, assignCarNo);
+        CarDailyRentalLogPO updateStatusPO = assembleCarStatusInfo(carRentalDO, assignCarNo);
 
-
+        //store rental order & update car available status
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus status) {
-                try{
+                try {
                     carRentalOrderMapper.insertCarRentalOrder(carRentalOrderPO);
                     carRentalLogMapper.updateCarRentalLogStatus(updateStatusPO);
-                } catch (Exception e){
+                } catch (Exception e) {
                     LOGGER.error("add rental order fail.", e);
                     throw new BusinessException(SAVE_RENTAL_ORDER_FAIL);
                 }
@@ -70,9 +81,9 @@ public class CarRentalServiceImpl implements CarRentalService {
 
     }
 
-    private void paramsCheck(CarRentalDO carRentalDO){
-        if(null == carRentalDO){
-            throw new BusinessException(CarRentalErrorCode.PARAMS_EMPTY.getCode(),"object empty");
+    private void checkParams(CarRentalDO carRentalDO) {
+        if (null == carRentalDO) {
+            throw new BusinessException(CarRentalErrorCode.PARAMS_EMPTY.getCode(), "object empty");
         }
 
         if (StringUtils.isEmpty(carRentalDO.getCarModel())
@@ -85,21 +96,73 @@ public class CarRentalServiceImpl implements CarRentalService {
             throw new BusinessException(CarRentalErrorCode.PARAMS_EMPTY.getCode(), "Rent date missing");
         }
 
-        if(carRentalDO.getRentalStartTime()>=carRentalDO.getRentalEndTime()){
+        if (carRentalDO.getRentalStartTime() >= carRentalDO.getRentalEndTime()) {
             throw new BusinessException(CarRentalErrorCode.RENTAL_DATE_ILLEGAL.getCode(), "Start time should less than end time");
         }
 
     }
 
-    private String assignAvailableCar(CarRentalDO carRentalDO){
+    /**
+     * assign available car
+     *
+     * @param carRentalDO rental info
+     * @return assign car no
+     */
+    private String assignAvailableCar(CarRentalDO carRentalDO) {
 
-      //  String rentalModel = carRentalDO=
-        //String carRentalDO = carRental
-        return "Toyota1";
+        String rentalModel = carRentalDO.getCarModel();
+        List<CarInfoDO> carInfoDOList = carInfoQueryService.queryCarInfoListByModel(rentalModel);
+        if (CollectionUtils.isEmpty(carInfoDOList)) {
+            throw new BusinessException(CAR_MODEL_NOT_EXIST, "Request car model not exist");
+        }
+
+        List<String> carNoList = carInfoDOList.stream().map(CarInfoDO::getCarNo).collect(Collectors.toList());
+        List<CarDailyRentalLogDO> curAvailableRentalList = carRentalLogQueryService.queryAvailableDailyRentalByCarNoList(carNoList);
+        if (CollectionUtils.isEmpty(curAvailableRentalList)) {
+            throw new BusinessException(NOT_AVAILABLE_CAR, "All cars have been occupied");
+        }
+
+        Map<String, Set<Long>> carAvailableTimeMap = new HashMap<>();
+        curAvailableRentalList.forEach(p -> {
+            Set<Long> availableTimeSet = carAvailableTimeMap.get(p.getCarNo());
+            if (CollectionUtils.isEmpty(availableTimeSet)) {
+                availableTimeSet = new HashSet<>();
+            }
+            availableTimeSet.add(p.getRecordTime());
+            carAvailableTimeMap.put(p.getCarNo(), availableTimeSet);
+        });
+
+        List<Long> requireRentalDateList = getOccupiedTimeList(carRentalDO.getRentalStartTime(), carRentalDO.getRentalEndTime());
+
+        List<String> satisfyCarNoList = new ArrayList<>();
+        carNoList.forEach(carNo -> {
+                    if (carAvailableTimeMap.get(carNo)
+                            .containsAll(requireRentalDateList)) {
+                        satisfyCarNoList.add(carNo);
+                    }
+                }
+        );
+
+        if (CollectionUtils.isEmpty(satisfyCarNoList)) {
+            throw new BusinessException(NOT_AVAILABLE_CAR, "Please change another time slot");
+        }
+        return satisfyCarNoList.get(0);
     }
 
 
-    private CarRentalOrderPO assembleCarRentalOrderInfo(CarRentalDO carRentalDO,String assignedCarNo){
+    private List<Long> getOccupiedTimeList(Long startTime, Long endTime) {
+        List<Long> occupiedTimeList = new ArrayList<>();
+        Long temp = startTime;
+        while (temp < endTime) {
+            Long occupiedTime = temp;
+            occupiedTimeList.add(occupiedTime);
+            temp += 3600 * 24 * 1000;
+        }
+        return occupiedTimeList;
+    }
+
+
+    private CarRentalOrderPO assembleCarRentalOrderInfo(CarRentalDO carRentalDO, String assignedCarNo) {
         CarRentalOrderPO carRentalOrderPO = new CarRentalOrderPO();
         carRentalOrderPO.setCarNo(assignedCarNo);
         carRentalOrderPO.setCreateTime(System.currentTimeMillis());
@@ -110,16 +173,9 @@ public class CarRentalServiceImpl implements CarRentalService {
         return carRentalOrderPO;
     }
 
-    private CarDailyRentalLogPO assembleCarStatusInfo(CarRentalDO carRentalDO,String assignCarNo){
+    private CarDailyRentalLogPO assembleCarStatusInfo(CarRentalDO carRentalDO, String assignCarNo) {
         CarDailyRentalLogPO updateStatusInfoPO = new CarDailyRentalLogPO();
-        List<Long> occupiedTimeList = new ArrayList<>();
-        Long startTime = carRentalDO.getRentalStartTime();
-        Long endTime = carRentalDO.getRentalEndTime();
-        Long occupiedDateTimeStamp = startTime;
-        while(occupiedDateTimeStamp<endTime){
-            occupiedTimeList.add(occupiedDateTimeStamp);
-            occupiedDateTimeStamp+=3600*24*1000;
-        }
+        List<Long> occupiedTimeList = getOccupiedTimeList(carRentalDO.getRentalStartTime(), carRentalDO.getRentalEndTime());
         updateStatusInfoPO.setCarNo(assignCarNo);
         updateStatusInfoPO.setStatus(CarRentalStatus.OCCUPIED.value);
         updateStatusInfoPO.setOperateTimeList(occupiedTimeList);

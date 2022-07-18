@@ -10,6 +10,14 @@ public interface CarRentalLogMapper {
 
 
     /**
+     * query car daily rental log list
+     * will scan the whole table
+     * @param queryPO query param po
+     * @return list of rental log
+     */
+    List<CarDailyRentalLogPO> queryCarDailyRentalLogList(CarDailyRentalLogPO queryPO);
+
+    /**
      * update car rental status
      * @param carDailyRentalLogPO car status update info
      *
