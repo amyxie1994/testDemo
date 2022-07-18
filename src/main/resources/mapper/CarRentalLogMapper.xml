@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.assignment.dao.CarRentalLogMapper">
+
+
+
+    <update id="updateCarRentalLogStatus" parameterType="com.example.assignment.domain.po.CarDailyRentalLogPO">
+        UPDATE
+        demo_car_daily_rental_log o
+        set
+        o.status = #{status}
+        WHERE
+        o.car_no = #{carNo}
+        and
+        o.record_time in
+        <foreach collection="operateTimeList" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+
+</mapper>

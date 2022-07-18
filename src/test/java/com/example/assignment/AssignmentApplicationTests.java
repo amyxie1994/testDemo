@@ -11,10 +11,4 @@ import javax.annotation.Resource;
 class AssignmentApplicationTests {
 
 
-    public  String queryOverseaStockistList() {
-
-        return " I am just testing ";
-
-    }
-
 }
