@@ -53,8 +53,8 @@ public class CarRentalTest {
         CarRentalVO carRentalVO = new CarRentalVO();
         carRentalVO.setCustomerName("test");
         carRentalVO.setCarModel("TOYOTA Carmry");
-        carRentalVO.setRentalStartTime(10002L);
-        carRentalVO.setRentalEndTime(10004L);
+        carRentalVO.setRentalStartTime(10000L);
+        carRentalVO.setRentalEndTime(10001L);
         Result res = carRentalController.rentalCar(carRentalVO);
         Assert.assertTrue("1".equals(res.getRet()));
 
