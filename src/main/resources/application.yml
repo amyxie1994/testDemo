@@ -1,0 +1,13 @@
+server: #端口如果不配默认8080
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://119.91.87.49:3306/test_by_crab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: test_by_crab
+    password: ny4RBz6kDwTwrkDc
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.assignment.entity
