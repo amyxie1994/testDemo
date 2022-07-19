@@ -60,9 +60,19 @@ public class CarRentalTest {
 
     }
 
+    /**
+     * test stock - not enough stock
+     */
+    @Test
+    public void testNotEnoughStock(){
+        CarRentalVO carRentalVO = new CarRentalVO();
+        carRentalVO.setCustomerName("test");
+        carRentalVO.setCarModel("TOYOTA Carmry");
+        carRentalVO.setRentalStartTime(10000L);
+        carRentalVO.setRentalEndTime(10001L);
+        Result res = carRentalController.rentalCar(carRentalVO);
+        Assert.assertTrue("0".equals(res.getRet()));
 
-
-
-
+    }
 
 }

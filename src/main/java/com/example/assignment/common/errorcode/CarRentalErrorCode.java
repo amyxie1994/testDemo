@@ -5,11 +5,11 @@ import java.util.Map;
 
 public enum CarRentalErrorCode implements ErrorCode {
 
-    PARAMS_EMPTY("PARAMS_EMPTY", "PARAMS_EMPTY"),
-    CAR_MODEL_NOT_EXIST("CAR_MODEL_NOT_EXIST", "CAR_MODEL_NOT_EXIST"),
-    RENTAL_DATE_ILLEGAL("RENTAL_DATE_ILLEGAL","Rental date illegal"),
-    NOT_AVAILABLE_CAR("NOT_AVAILABLE_CAR", "NOT_AVAILABLE_CAR"),
-    SAVE_RENTAL_ORDER_FAIL("SAVE_RENTAL_ORDER_FAIL","Save rental order fail");
+    PARAMS_EMPTY("001", "PARAMS_EMPTY"),
+    CAR_MODEL_NOT_EXIST("002", "CAR_MODEL_NOT_EXIST"),
+    RENTAL_DATE_ILLEGAL("003","Rental date illegal"),
+    NOT_AVAILABLE_CAR("004", "NOT_AVAILABLE_CAR"),
+    SAVE_RENTAL_ORDER_FAIL("005","Save rental order fail");
     ;
 
     /**

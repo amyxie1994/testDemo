@@ -28,8 +28,7 @@ public class CarRentalController {
     @RequestMapping("/rent")
     public Result rentalCar(@RequestBody CarRentalVO carRentalVO) {
         try{
-            carRentalService.rentCar(CarRentalVOConvert.carRentalVO2DO(carRentalVO));
-            return ResultUtil.success();
+            return ResultUtil.success(carRentalService.rentCar(CarRentalVOConvert.carRentalVO2DO(carRentalVO)));
         } catch (BusinessException e) {
             LOGGER.warn("Rent car error,errMsg:{} errCode:{}", e.getMessage(), e.getCode());
             return ResultUtil.fail(e.getMessage(), e.getCode());

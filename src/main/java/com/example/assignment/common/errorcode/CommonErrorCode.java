@@ -5,7 +5,7 @@ import java.util.Map;
 
 public enum CommonErrorCode implements ErrorCode{
 
-    SYSTEM_ERROR("SYSTEM_ERROR", "SYSTEM_ERROR"),
+    SYSTEM_ERROR("000", "SYSTEM_ERROR"),
             ;
 
     /**
